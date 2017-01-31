@@ -143,9 +143,15 @@
             
             $response = $this->xml2array($this->unwrap());
             
-            if($response['epp']['response']['result_attr']['code'] != '1000')
-                return array($response['epp']['response']['result_attr']['code'] => $response['epp']['response']['result']['msg']);
-                
+            if($response['epp']['response']['result_attr']['code'] != '1000') {
+                if(isset($response['epp']['response']['result']['extValue']['reason'])) {
+                    $reason = $response['epp']['response']['result']['extValue']['reason'];
+                } else {
+                    $reason = $response['epp']['response']['result']['msg'];
+                }
+                return array($response['epp']['response']['result_attr']['code'] => $reason);
+            }
+
             $data = array(
                 'client_id' => $response['epp']['response']['resData']['contact:creData']['contact:id'],
                 'client_creation' => $response['epp']['response']['resData']['contact:creData']['contact:crDate'],
@@ -738,9 +744,15 @@
             
             $response = $this->xml2array($this->unwrap());
             
-            if($response['epp']['response']['result_attr']['code'] != '1000' &&
-                $response['epp']['response']['result_attr']['code'] != '1001')
-                return array($response['epp']['response']['result_attr']['code'] => $response['epp']['response']['result']['msg']);
+            if($response['epp']['response']['result_attr']['code'] != '1000' && $response['epp']['response']['result_attr']['code'] != '1001') {
+                if(isset($response['epp']['response']['result']['extValue']['reason'])) {
+                    $reason = $response['epp']['response']['result']['extValue']['reason'];
+                } else {
+                    $reason = $response['epp']['response']['result']['msg'];
+                }
+                return array($response['epp']['response']['result_attr']['code'] => $reason);
+            }
+
         
             $data = array(
                 'domain_name' => $response['epp']['response']['resData']['domain:creData']['domain:name'],
@@ -829,6 +841,23 @@
                             </domain:hostAttr>
                         </domain:add>";*/
 
+            $nameservers = "";
+
+            if(!empty($dns_3)) {
+                $nameservers .= "
+                <domain:hostAttr>
+                    <domain:hostName>{$dns_3}</domain:hostName>
+                </domain:hostAttr>
+                ";
+            }
+            if(!empty($dns_4)) {
+                $nameservers .= "
+                <domain:hostAttr>
+                    <domain:hostName>{$dns_4}</domain:hostName>
+                </domain:hostAttr>
+                ";
+            }
+
             $chg = "<domain:rem>
                         <domain:hostAttr>
                             <domain:hostName>{$domain_data['domain_dns']['dns_1']}</domain:hostName>
@@ -851,12 +880,7 @@
                         <domain:hostAttr>
                             <domain:hostName>{$dns_2}</domain:hostName>
                         </domain:hostAttr>
-                        <domain:hostAttr>
-                            <domain:hostName>{$dns_3}</domain:hostName>
-                        </domain:hostAttr>
-                        <domain:hostAttr>
-                            <domain:hostName>{$dns_4}</domain:hostName>
-                        </domain:hostAttr>
+                        ".$nameservers."
                     </domain:add>";
             
             if($client_id != null)
